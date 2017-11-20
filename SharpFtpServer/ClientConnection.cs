@@ -108,6 +108,7 @@ namespace SharpFtpServer
         #endregion
         #region ConstVars
         public static Encoding Default_FTP_Enc = Encoding.GetEncoding(950);
+        
         #endregion
 
         private bool _disposed = false;
@@ -203,6 +204,10 @@ namespace SharpFtpServer
                 string strMessage = clientEnc.GetString(messageBytes, 0, bytesRead).Trim();
 #if DEBUG
                 Console.WriteLine("C:" + strMessage);
+                if (strMessage.Contains("LSIT -a"))
+                {
+                    strMessage = "LIST";Console.WriteLine("LIST -a ERROR");
+                }
 #else
   
 #endif
@@ -267,6 +272,7 @@ namespace SharpFtpServer
                     for (int i = lines.Length-1; i < lines.Length; i++)
                     {
                         line = lines[i];
+                      
                         if (line.Trim().Equals(""))
                         {
                             Write("200 ok go ahead.");
@@ -281,7 +287,7 @@ namespace SharpFtpServer
                         else if (line.StartsWith("opts utf8 on"))
                         {
                             clientEnc = Default_FTP_Enc;
-                            Write("502 Command okay.");
+                            Write("502 no impl.");
                             continue;
                         }
                         string response = null;
@@ -387,7 +393,7 @@ namespace SharpFtpServer
                                     break;
                                 case "STOR":
                                     if (arguments.Contains("?"))
-                                    {// strMessage = strMessage.Replace("?", "."); 
+                                    {
                                         response = "501 Invalid character in file name BadFileName";
                                     }
                                     else
@@ -1168,8 +1174,9 @@ namespace SharpFtpServer
             //StreamWriter dataWriter = new StreamWriter(dataStream, Encoding.ASCII);
             StreamWriter dataWriter = new StreamWriter(dataStream, clientEnc);
 
-            
+
             //IEnumerable<string> directories = Directory.EnumerateDirectories(pathname);
+            
             DirectoryInfo directories = new DirectoryInfo(pathname);
 
             foreach (DirectoryInfo d  in directories.GetDirectories())
