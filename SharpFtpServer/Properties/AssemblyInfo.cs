@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SharpFtpServer")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Rick Bassham")]
+[assembly: AssemblyCompany("MAIL.MBC")]
 [assembly: AssemblyProduct("SharpFtpServer")]
-[assembly: AssemblyCopyright("Copyright © Rick Bassham 2012")]
+[assembly: AssemblyCopyright("Copyright © MAIL.MBC")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

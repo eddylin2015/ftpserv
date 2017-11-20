@@ -178,38 +178,35 @@ namespace SharpFtpServer
         {
             return Convert.FromBase64String(s);
         }
-        private String Read()
+        private String[] Read()
         {
             byte[] messageBytes = new byte[8192];
             int bytesRead = 0;
-            if (_sslStream != null) {
+            if (_sslStream != null)
+            {
                 bytesRead = _sslStream.Read(messageBytes, 0, 8192);
                 string strMessage_ = clientEnc.GetString(messageBytes, 0, bytesRead).Trim();
-                return strMessage_;
-            }
-
-            NetworkStream clientStream = _controlClient.GetStream();
-
-            bytesRead = clientStream.Read(messageBytes, 0, 8192);
-
-
-            
-           string strMessage = clientEnc.GetString(messageBytes, 0, bytesRead).Trim();
-            Console.WriteLine("C:" + strMessage);
-            if (false &&(strMessage.Contains("STOR")|| strMessage.Contains("DELE")))
-            {
-                Console.WriteLine("C:{0}\n", BitConverter.ToString(messageBytes, 0, bytesRead));
-                Console.WriteLine("C{0}:{1}", bytesRead, Convert.ToBase64String(messageBytes, 0, bytesRead));
-                foreach (EncodingInfo enc in Encoding.GetEncodings())
+                string[] messages_ = strMessage_.Split('\n');
+                for (int i = 0; i < messages_.Length; i++)
                 {
-                    Console.WriteLine("{0}{1}:{2}", enc.CodePage, enc.DisplayName, Encoding.GetEncoding(enc.CodePage).GetString(messageBytes, 0, bytesRead));
+                    messages_[i] = messages_[i].Trim();
                 }
+                return messages_;
             }
-            if (strMessage.Contains("STOR")&& strMessage.Contains("?"))
-            {// strMessage = strMessage.Replace("?", "."); 
-                
+            else
+            {
+                NetworkStream clientStream = _controlClient.GetStream();
+                bytesRead = clientStream.Read(messageBytes, 0, 8192);
+                string strMessage = clientEnc.GetString(messageBytes, 0, bytesRead).Trim();
+                Console.WriteLine("C:" + strMessage);
+                string[] messages_ = strMessage.Split('\n');
+                for (int i = 0; i < messages_.Length; i++)
+                {
+                    messages_[i] = messages_[i].Trim();
+                }
+                return messages_;
             }
-            return strMessage;
+            //return strMessage;
         }
         private void Write(String strMessage)
         {
@@ -242,252 +239,261 @@ namespace SharpFtpServer
            Write("220-Service Ready\r\n FTP SERVER\r\n220 end.");
             _validCommands.AddRange(new string[] { "AUTH", "USER", "PASS", "QUIT", "HELP", "NOOP" });
 
-            string line;
+            
 
             _dataClient = new TcpClient();
 
             string renameFrom = null;
-
+            string[] lines = null ;
+            string line;
             try
             {
                 //  while ((line = _controlReader.ReadLine()) != null)
-                while ((line = Read()) != null)
+                while ((lines = Read()) != null)
                 {
-                   
-                    if(line.ToUpper().StartsWith("OPTS UTF8 ON"))
+                    for (int i = 0; i < lines.Length; i++)
                     {
-                        clientEnc = Encoding.UTF8;
-                        Write("200 Command okay.");
-                        
-                        continue;
-                    }
-                    string response = null;
-
-                    string[] command = line.Split(' ');
-
-                    string cmd = command[0].ToUpperInvariant();
-                    string arguments = command.Length > 1 ? line.Substring(command[0].Length + 1) : null;
-
-                    if (arguments != null && arguments.Trim().Length == 0)
-                    {
-                        arguments = null;
-                    }
-
-                    LogEntry logEntry = new LogEntry
-                    {
-                        Date = DateTime.Now,
-                        CIP = _clientIP,
-                        CSUriStem = arguments
-                    };
-
-                    if (!_validCommands.Contains(cmd))
-                    {
-                        response = CheckUser();
-                    }
-
-                    if (cmd != "RNTO")
-                    {
-                        renameFrom = null;
-                    }
-
-                    if (response == null)
-                    {
-                        
-                        switch (cmd)
+                        line = lines[i];
+                        if (line.StartsWith("OPTS UTF8 ON"))
                         {
-                            case "USER":
-                                response = User(arguments);
-                                break;
-                            case "PASS":
-                                response = Password(arguments);
-                                logEntry.CSUriStem = "******";
-                                break;
-                            case "CWD":
-                                response = ChangeWorkingDirectory(arguments);
-                                break;
-                            case "CDUP":
-                                response = ChangeWorkingDirectory("..");
-                                break;
-                            case "QUIT":
-                                response = "221 Service closing control connection";
-                                break;
-                            case "REIN":
-                                _currentUser = null;
-                                _username = null;
-                                _passiveListener = null;
-                                _dataClient = null;
-
-                                response = "220 Service ready for new user";
-                                break;
-                            case "PORT":
-                             
-                                response = Port(arguments);
-                                logEntry.CPort = _dataEndpoint.Port.ToString();
-                                break;
-                            case "PASV":
-                                response = "502 Command not implemented";
-                                response = Passive();
-                                logEntry.SPort = ((IPEndPoint)_passiveListener.LocalEndpoint).Port.ToString();
-                                break;
-                            case "TYPE":
-                                response = Type(command[1], command.Length == 3 ? command[2] : null);
-                                logEntry.CSUriStem = command[1];
-                                break;
-                            case "STRU":
-                                response = Structure(arguments);
-                                break;
-                            case "MODE":
-                                response = Mode(arguments);
-                                break;
-                            case "RNFR":
-                                renameFrom = arguments;
-                                response = "350 Requested file action pending further information";
-                                break;
-                            case "RNTO":
-                                response = Rename(renameFrom, arguments);
-                                break;
-                            case "DELE":
-                                response = Delete(arguments);
-                                break;
-                            case "RMD":
-                                response = RemoveDir(arguments);
-                                break;
-                            case "MKD":
-                                response = CreateDir(arguments);
-                                break;
-                            case "PWD":
-                                response = PrintWorkingDirectory();
-                                break;
-                            case "RETR":
-                                response = Retrieve(arguments);
-                                logEntry.Date = DateTime.Now;
-                                break;
-                            case "STOR":
-                                if ( arguments.Contains("?"))
-                                {// strMessage = strMessage.Replace("?", "."); 
-                                    response = "501 Invalid character in file name BadFileName";
-                                }
-                                else
-                                {
-                                    response = Store(arguments);
-                                    logEntry.Date = DateTime.Now;
-                                }
-                                break;
-                            case "STOU":
-                                response = StoreUnique();
-                                logEntry.Date = DateTime.Now;
-                                break;
-                            case "APPE":
-                                response = Append(arguments);
-                                logEntry.Date = DateTime.Now;
-                                break;
-                            case "LIST":
-                                response = List(arguments ?? _currentDirectory);
-                                logEntry.Date = DateTime.Now;
-                                break;
-                            case "SYST":
-                                response = "215 UNIX Type: L8";
-                                break;
-                            case "NOOP":
-                                response = "200 ok";
-                                break;
-                            case "ACCT":
-                                response = "200 OK";
-                                break;
-                            case "ALLO":
-                                response = "200 OK";
-                                break;
-                            case "NLST":
-                                response = "502 Command not implemented";
-                                break;
-                            case "SITE":
-                                response = "502 Command not implemented";
-                                break;
-                            case "STAT":
-                                response = "502 Command not implemented";
-                                break;
-                            case "HELP":
-                                response = "502 Command not implemented";
-                                break;
-                            case "SMNT":
-                                response = "502 Command not implemented";
-                                break;
-                            case "REST":
-                                response = "502 Command not implemented";
-                                break;
-                            case "ABOR":
-                                response = "502 Command not implemented";
-                                break;
-
-                            // Extensions defined by rfc 2228
-                            case "AUTH":
-                                response = Auth(arguments);
-                                break;
-
-                            // Extensions defined by rfc 2389
-                            case "FEAT":
-                                response = FeatureList();
-                                break;
-                            case "OPTS":
-                                response = Options(arguments);
-                                break;
-
-                            // Extensions defined by rfc 3659
-                            case "MDTM":
-                                response = FileModificationTime(arguments);
-                                break;
-                            case "SIZE":
-                                response = FileSize(arguments);
-                                break;
-
-                            // Extensions defined by rfc 2428
-                            case "EPRT":
-                                response = EPort(arguments);
-                                logEntry.CPort = _dataEndpoint.Port.ToString();
-                                break;
-                            case "EPSV":
-                                response = EPassive();
-                                logEntry.SPort = ((IPEndPoint)_passiveListener.LocalEndpoint).Port.ToString();
-                                break;
-
-                            default:
-                                response = "502 Command not implemented";
-                                break;
+                            clientEnc = Encoding.UTF8;
+                            Write("200 Command okay.");
+                            continue;
                         }
-                    }
+                        else if (line.StartsWith("opts utf8 on"))
+                        {
+                            clientEnc = Encoding.GetEncoding(950);
+                            Write("502 Command okay.");
+                            continue;
+                        }
+                        string response = null;
 
-                    logEntry.CSMethod = cmd;
-                    logEntry.CSUsername = _username;
-                    logEntry.SCStatus = response.Substring(0, response.IndexOf(' '));
+                        string[] command = line.Split(' ');
 
-                    _log.Info(logEntry);
+                        string cmd = command[0].ToUpperInvariant();
+                        string arguments = command.Length > 1 ? line.Substring(command[0].Length + 1) : null;
 
-                    if (_controlClient == null || !_controlClient.Connected)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        Write(response);
-             
-                   
-                        if (response.StartsWith("221"))
+                        if (arguments != null && arguments.Trim().Length == 0)
+                        {
+                            arguments = null;
+                        }
+
+                        LogEntry logEntry = new LogEntry
+                        {
+                            Date = DateTime.Now,
+                            CIP = _clientIP,
+                            CSUriStem = arguments
+                        };
+
+                        if (!_validCommands.Contains(cmd))
+                        {
+                            response = CheckUser();
+                        }
+
+                        if (cmd != "RNTO")
+                        {
+                            renameFrom = null;
+                        }
+
+                        if (response == null)
+                        {
+
+                            switch (cmd)
+                            {
+                                case "USER":
+                                    response = User(arguments);
+                                    break;
+                                case "PASS":
+                                    response = Password(arguments);
+                                    logEntry.CSUriStem = "******";
+                                    break;
+                                case "CWD":
+                                    response = ChangeWorkingDirectory(arguments);
+                                    break;
+                                case "CDUP":
+                                    response = ChangeWorkingDirectory("..");
+                                    break;
+                                case "QUIT":
+                                    response = "221 Service closing control connection";
+                                    break;
+                                case "REIN":
+                                    _currentUser = null;
+                                    _username = null;
+                                    _passiveListener = null;
+                                    _dataClient = null;
+
+                                    response = "220 Service ready for new user";
+                                    break;
+                                case "PORT":
+
+                                    response = Port(arguments);
+                                    logEntry.CPort = _dataEndpoint.Port.ToString();
+                                    break;
+                                case "PASV":
+                                    response = "502 Command not implemented";
+                                    response = Passive();
+                                    logEntry.SPort = ((IPEndPoint)_passiveListener.LocalEndpoint).Port.ToString();
+                                    break;
+                                case "TYPE":
+                                    response = Type(command[1], command.Length == 3 ? command[2] : null);
+                                    logEntry.CSUriStem = command[1];
+                                    break;
+                                case "STRU":
+                                    response = Structure(arguments);
+                                    break;
+                                case "MODE":
+                                    response = Mode(arguments);
+                                    break;
+                                case "RNFR":
+                                    renameFrom = arguments;
+                                    response = "350 Requested file action pending further information";
+                                    break;
+                                case "RNTO":
+                                    response = Rename(renameFrom, arguments);
+                                    break;
+                                case "DELE":
+                                    response = Delete(arguments);
+                                    break;
+                                case "RMD":
+                                    response = RemoveDir(arguments);
+                                    break;
+                                case "MKD":
+                                    response = CreateDir(arguments);
+                                    break;
+                                case "PWD":
+                                    response = PrintWorkingDirectory();
+                                    break;
+                                case "RETR":
+                                    response = Retrieve(arguments);
+                                    logEntry.Date = DateTime.Now;
+                                    break;
+                                case "STOR":
+                                    if (arguments.Contains("?"))
+                                    {// strMessage = strMessage.Replace("?", "."); 
+                                        response = "501 Invalid character in file name BadFileName";
+                                    }
+                                    else
+                                    {
+                                        response = Store(arguments);
+                                        logEntry.Date = DateTime.Now;
+                                    }
+                                    break;
+                                case "STOU":
+                                    response = StoreUnique();
+                                    logEntry.Date = DateTime.Now;
+                                    break;
+                                case "APPE":
+                                    response = Append(arguments);
+                                    logEntry.Date = DateTime.Now;
+                                    break;
+                                case "LIST":
+                                    response = List(arguments ?? _currentDirectory);
+                                    logEntry.Date = DateTime.Now;
+                                    break;
+                                case "SYST":
+                                    response = "215 UNIX Type: L8";
+                                    break;
+                                case "NOOP":
+                                    response = "200 ok";
+                                    break;
+                                case "ACCT":
+                                    response = "200 OK";
+                                    break;
+                                case "ALLO":
+                                    response = "200 OK";
+                                    break;
+                                case "NLST":
+                                    response = "502 Command not implemented";
+                                    break;
+                                case "SITE":
+                                    response = "502 Command not implemented";
+                                    break;
+                                case "STAT":
+                                    response = "502 Command not implemented";
+                                    break;
+                                case "HELP":
+                                    response = "502 Command not implemented";
+                                    break;
+                                case "SMNT":
+                                    response = "502 Command not implemented";
+                                    break;
+                                case "REST":
+                                    response = "502 Command not implemented";
+                                    break;
+                                case "ABOR":
+                                    response = "502 Command not implemented";
+                                    break;
+
+                                // Extensions defined by rfc 2228
+                                case "AUTH":
+                                    response = Auth(arguments);
+                                    break;
+
+                                // Extensions defined by rfc 2389
+                                case "FEAT":
+                                    response = FeatureList();
+                                    break;
+                                case "OPTS":
+                                    response = Options(arguments);
+                                    break;
+
+                                // Extensions defined by rfc 3659
+                                case "MDTM":
+                                    response = FileModificationTime(arguments);
+                                    break;
+                                case "SIZE":
+                                    response = FileSize(arguments);
+                                    break;
+
+                                // Extensions defined by rfc 2428
+                                case "EPRT":
+                                    response = EPort(arguments);
+                                    logEntry.CPort = _dataEndpoint.Port.ToString();
+                                    break;
+                                case "EPSV":
+                                    response = EPassive();
+                                    logEntry.SPort = ((IPEndPoint)_passiveListener.LocalEndpoint).Port.ToString();
+                                    break;
+
+                                default:
+                                    response = "502 Command not implemented";
+                                    break;
+                            }
+                        }
+
+                        logEntry.CSMethod = cmd;
+                        logEntry.CSUsername = _username;
+                        logEntry.SCStatus = response.Substring(0, response.IndexOf(' '));
+
+                        _log.Info(logEntry);
+
+                        if (_controlClient == null || !_controlClient.Connected)
                         {
                             break;
                         }
-
-                        if (cmd == "AUTH")
+                        else
                         {
-                            Console.WriteLine("no impl!");
-                            
-                            _cert = new X509Certificate("server.cer");
+                            Write(response);
 
-                            _sslStream = new SslStream(_controlStream);
 
-                            _sslStream.AuthenticateAsServer(_cert);
+                            if (response.StartsWith("221"))
+                            {
+                                break;
+                            }
 
-                           // _controlReader = new StreamReader(_sslStream);
-                           // _controlWriter = new StreamWriter(_sslStream);
+                            if (cmd == "AUTH")
+                            {
+                                Console.WriteLine("no impl!");
+
+                                _cert = new X509Certificate("server.cer");
+
+                                _sslStream = new SslStream(_controlStream);
+
+                                _sslStream.AuthenticateAsServer(_cert);
+
+                                // _controlReader = new StreamReader(_sslStream);
+                                // _controlWriter = new StreamWriter(_sslStream);
+                            }
                         }
                     }
                 }
