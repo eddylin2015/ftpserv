@@ -106,6 +106,9 @@ namespace SharpFtpServer
         }
 
         #endregion
+        #region ConstVars
+        public static Encoding Default_FTP_Enc = Encoding.GetEncoding(950);
+        #endregion
 
         private bool _disposed = false;
 
@@ -198,7 +201,12 @@ namespace SharpFtpServer
                 NetworkStream clientStream = _controlClient.GetStream();
                 bytesRead = clientStream.Read(messageBytes, 0, 8192);
                 string strMessage = clientEnc.GetString(messageBytes, 0, bytesRead).Trim();
+#if DEBUG
                 Console.WriteLine("C:" + strMessage);
+#else
+  
+#endif
+
                 string[] messages_ = strMessage.Split('\n');
                 for (int i = 0; i < messages_.Length; i++)
                 {
@@ -221,10 +229,15 @@ namespace SharpFtpServer
                 byte[] buffer = System.Text.Encoding.UTF8.GetBytes(strMessage + "\r\n");
                 _controlStream.Write(buffer, 0, buffer.Length);
                 _controlStream.Flush();
+#if DEBUG
                 Console.WriteLine("S:" + strMessage);
+#else
+  
+#endif
+
             }
         }
-        private Encoding clientEnc = Encoding.Default;
+        private Encoding clientEnc = Default_FTP_Enc;
         public void HandleClient(object obj)
         {
             _remoteEndPoint = (IPEndPoint)_controlClient.Client.RemoteEndPoint;
@@ -251,9 +264,14 @@ namespace SharpFtpServer
                 //  while ((line = _controlReader.ReadLine()) != null)
                 while ((lines = Read()) != null)
                 {
-                    for (int i = 0; i < lines.Length; i++)
+                    for (int i = lines.Length-1; i < lines.Length; i++)
                     {
                         line = lines[i];
+                        if (line.Trim().Equals(""))
+                        {
+                            Write("200 ok go ahead.");
+                            continue;
+                        }
                         if (line.StartsWith("OPTS UTF8 ON"))
                         {
                             clientEnc = Encoding.UTF8;
@@ -262,7 +280,7 @@ namespace SharpFtpServer
                         }
                         else if (line.StartsWith("opts utf8 on"))
                         {
-                            clientEnc = Encoding.GetEncoding(950);
+                            clientEnc = Default_FTP_Enc;
                             Write("502 Command okay.");
                             continue;
                         }
