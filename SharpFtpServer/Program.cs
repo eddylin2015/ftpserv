@@ -10,7 +10,7 @@ namespace SharpFtpServer
     {
         static void Main(string[] args)
         {
-           Console.OutputEncoding = Encoding.UTF8;
+          //Console.OutputEncoding = Encoding.UTF8;
 #if DEBUG
 
             foreach (EncodingInfo einfo in Encoding.GetEncodings())

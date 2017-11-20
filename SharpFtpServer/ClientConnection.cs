@@ -1178,7 +1178,7 @@ namespace SharpFtpServer
             //IEnumerable<string> directories = Directory.EnumerateDirectories(pathname);
             
             DirectoryInfo directories = new DirectoryInfo(pathname);
-
+            if(!directories.Exists) return "502 Transfer complete";
             foreach (DirectoryInfo d  in directories.GetDirectories())
             {
                // DirectoryInfo d = new DirectoryInfo(dir);
