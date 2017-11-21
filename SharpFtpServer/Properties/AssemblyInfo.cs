@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SharpFtpServer")]
+[assembly: AssemblyTitle("CoolFtpServ")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("MAIL.MBC")]
-[assembly: AssemblyProduct("SharpFtpServer")]
-[assembly: AssemblyCopyright("Copyright © MAIL.MBC")]
+[assembly: AssemblyCompany("MAIL.MBC.EDU.MO")]
+[assembly: AssemblyProduct("CoolFtpServ")]
+[assembly: AssemblyCopyright("Copyright © MAIL.MBC.EDU.MO")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

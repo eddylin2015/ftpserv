@@ -21,6 +21,9 @@ namespace SharpFtpServer
 
         ILog _log = LogManager.GetLogger(typeof(ClientConnection));
 
+        private static Encoding Default_FTP_Enc = Encoding.GetEncoding(950);
+
+
         #region Copy Stream Implementations
 
         private static long CopyStream(Stream input, Stream output, int bufferSize)
@@ -106,10 +109,7 @@ namespace SharpFtpServer
         }
 
         #endregion
-        #region ConstVars
-        public static Encoding Default_FTP_Enc = Encoding.GetEncoding(950);
-        
-        #endregion
+
 
         private bool _disposed = false;
 
@@ -119,8 +119,8 @@ namespace SharpFtpServer
         private TcpClient _dataClient;
 
         private NetworkStream _controlStream;
-       // private StreamReader _controlReader;
-       private StreamWriter _controlWriter;
+        // private StreamReader _controlReader;
+        private StreamWriter _controlWriter;
 
         private TransferType _connectionType = TransferType.Ascii;
         private FormatControlType _formatControlType = FormatControlType.NonPrint;

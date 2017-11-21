@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
-using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
@@ -59,18 +58,14 @@ namespace SharpFtpServer
 
             //Hide the Window
             ResizeWindow(false);
-            //Console.OutputEncoding = Encoding.UTF8;
-#if DEBUG
-            foreach (EncodingInfo einfo in Encoding.GetEncodings())
-                Console.WriteLine("{0}{1}{2}{3}",einfo.CodePage, einfo.DisplayName, einfo.Name, einfo.ToString());
-#endif
+
+
             ///////////////////////////////////////////////////
             //IPAddress ip = IPAddress.Parse("192.168.102.135");
             //using (FtpServer server = new FtpServer(IPAddress.IPv6Any, 21))
             using (FtpServer server = new FtpServer())
             {
                 server.Start();
-
                 Console.WriteLine("Press any key to stop...");
                 Application.Run();
                 while (!Console.ReadLine().Equals("Q")) { }

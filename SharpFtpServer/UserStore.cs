@@ -24,17 +24,17 @@ namespace SharpFtpServer
                 _users = serializer.Deserialize(new StreamReader("users.xml")) as List<User>;
                 _users.Add(new User
                 {
-                    Username = "1",
+                    Username = "t",
                     Password = "1",
-                    HomeDir = @"D:\code\ftpServer\SharpFtpServer\ftpdoc"
+                    HomeDir = @"D:\code\ftpServ\root"
                 });
             }
             else
             {
                 _users.Add(new User {
-                    Username = "1",
+                    Username = "t",
                     Password = "1",
-                    HomeDir = @"D:\code\ftpServer\SharpFtpServer\ftpdoc"
+                    HomeDir = @"D:\code\ftpServ\root"
                 });
 
                 using (StreamWriter w = new StreamWriter("users.xml"))
