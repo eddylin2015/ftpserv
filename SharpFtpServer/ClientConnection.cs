@@ -204,14 +204,10 @@ namespace SharpFtpServer
                 string strMessage = clientEnc.GetString(messageBytes, 0, bytesRead).Trim();
 #if DEBUG
                 Console.WriteLine("C:" + strMessage);
-                if (strMessage.Contains("LSIT -a"))
-                {
-                    strMessage = "LIST";Console.WriteLine("LIST -a ERROR");
-                }
 #else
-  
+ 
 #endif
-
+                if (strMessage.Contains("LSIT -a")) strMessage = "LIST";
                 string[] messages_ = strMessage.Split('\n');
                 for (int i = 0; i < messages_.Length; i++)
                 {
@@ -219,7 +215,6 @@ namespace SharpFtpServer
                 }
                 return messages_;
             }
-            //return strMessage;
         }
         private void Write(String strMessage)
         {
