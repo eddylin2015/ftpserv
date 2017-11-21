@@ -75,6 +75,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -92,6 +94,9 @@
     <Compile Include="UserStore.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Icon1.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="rfc2228.txt" />
     <Content Include="rfc2389.txt" />
     <Content Include="rfc3659.txt" />
