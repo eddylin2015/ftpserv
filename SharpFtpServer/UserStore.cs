@@ -25,16 +25,16 @@ namespace SharpFtpServer
                 _users.Add(new User
                 {
                     Username = "t",
-                    Password = "1",
-                    HomeDir = @"D:\code\ftpServ\root"
+                    Password = "t",
+                    HomeDir = @"D:\code\root"
                 });
             }
             else
             {
                 _users.Add(new User {
                     Username = "t",
-                    Password = "1",
-                    HomeDir = @"D:\code\ftpServ\root"
+                    Password = "t",
+                    HomeDir = @"D:\code\root"
                 });
 
                 using (StreamWriter w = new StreamWriter("users.xml"))

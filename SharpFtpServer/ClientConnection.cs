@@ -262,7 +262,7 @@ namespace SharpFtpServer
             try
             {
                 //  while ((line = _controlReader.ReadLine()) != null)
-                while ((lines = Read()) != null)
+                 while ((lines = Read()) != null)
                 {
                     for (int i = lines.Length-1; i < lines.Length; i++)
                     {
@@ -497,7 +497,7 @@ namespace SharpFtpServer
 
                             if (response.StartsWith("221"))
                             {
-                                break;
+                                goto outerloop;
                             }
 
                             if (cmd == "AUTH")
@@ -516,6 +516,7 @@ namespace SharpFtpServer
                         }
                     }
                 }
+                outerloop: int outerloop_cnt = 0;
             }
             catch (Exception ex)
             {
