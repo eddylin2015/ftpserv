@@ -87,14 +87,12 @@ namespace SharpFtpServer
                 if (disposing)
                 {
                     Stop();
-
                     foreach (ClientConnection conn in _activeConnections)
                     {
                         conn.Dispose();
                     }
                 }
             }
-
             _disposed = true;
         }
     }
