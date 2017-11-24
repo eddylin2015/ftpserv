@@ -488,7 +488,7 @@ namespace SharpFtpServer
 
                         if (_controlClient == null || !_controlClient.Connected)
                         {
-                            break;
+                            goto outerloop;
                         }
                         else
                         {

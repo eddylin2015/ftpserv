@@ -22,7 +22,7 @@ namespace SharpFtpServer
         private List<ClientConnection> _activeConnections;
 
         private IPEndPoint _localEndPoint;
-
+        int backlog=100;
         public FtpServer()
             : this(IPAddress.Any, 21)
         {
@@ -37,11 +37,12 @@ namespace SharpFtpServer
         {
             _listener = new TcpListener(_localEndPoint);
 
+
             _log.Info("#Version: 1.0");
             _log.Info("#Fields: date time c-ip c-port cs-username cs-method cs-uri-stem sc-status sc-bytes cs-bytes s-name s-port");
 
             _listening = true;
-            _listener.Start();
+            _listener.Start(backlog);
 
             _activeConnections = new List<ClientConnection>();
 
