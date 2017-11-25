@@ -1255,11 +1255,11 @@ namespace SharpFtpServer
                     {
                         _controlReader.Close();
                     }*/
-                    /*
+                   
                     if (_controlWriter != null)
                     {
                         _controlWriter.Close();
-                    }*/
+                    }
                 }
             }
 
